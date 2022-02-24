@@ -17,11 +17,11 @@ namespace WMDATest
     {
         IPatientService _service;
         List<Patient> listPatients;
-        private readonly Mock<IValidator<Patient>> _validator;
+        private readonly IValidator<Patient> _validator;
         public TestPatientService()
         {
             listPatients = MockDataUtils.PatientsMock();
-            _validator = new Mock<IValidator<Patient>>();
+            _validator = new PatientValidator();
         }
         [Fact]
         public async Task When_CreatePatient_Called_WithValidData_Should_ReturnIsSuccessTrue()
@@ -30,9 +30,9 @@ namespace WMDATest
             var mockSetPatients = listPatients.AsQueryable().BuildMockDbSet();
             var mockContext = new Mock<AppDbContext>();
             mockContext.Setup(c => c.Patients).Returns(mockSetPatients.Object);
-            _service = new PatientService(mockContext.Object, _validator.Object);
+            _service = new PatientService(mockContext.Object, _validator);
             Patient patient = new Patient() { FirstName = "MILLIE", LastName = "Thomas", DateOfBirth = new DateTime(2000, 01, 01), DiseaseType = "alm" };
-            _validator.Setup(t => t.Validate(patient)).Returns(new ValidationResult());
+
             // Act
             var result = await _service.CreatePatientAsync(patient);
             
@@ -46,10 +46,9 @@ namespace WMDATest
             var mockSetPatients = listPatients.AsQueryable().BuildMockDbSet();
             var mockContext = new Mock<AppDbContext>();
             mockContext.Setup(c => c.Patients).Returns(mockSetPatients.Object);
-            _service = new PatientService(mockContext.Object, _validator.Object);
+            _service = new PatientService(mockContext.Object, _validator);
             Patient patient = new Patient() { LastName = "Thomas", DateOfBirth = new DateTime(2000, 01, 01), DiseaseType = "alm" };
-            var expectedError = new List<ValidationFailure> { new("FirstName", "First name is required.") };
-            _validator.Setup(t => t.Validate(patient)).Returns(new ValidationResult(expectedError));
+
             // Act
             var exception = await Assert.ThrowsAsync<CustomException>(async () => await _service.CreatePatientAsync(patient));
 
@@ -63,10 +62,9 @@ namespace WMDATest
             var mockSetPatients = listPatients.AsQueryable().BuildMockDbSet();
             var mockContext = new Mock<AppDbContext>();
             mockContext.Setup(c => c.Patients).Returns(mockSetPatients.Object);
-            _service = new PatientService(mockContext.Object, _validator.Object);
+            _service = new PatientService(mockContext.Object, _validator);
             Patient patient = new Patient() { FirstName = "MILLIE", LastName = "Thomas", DiseaseType = "alm" };
-            var expectedError = new List<ValidationFailure> { new("DateOfBirth", "Date of birth is required.") };
-            _validator.Setup(t => t.Validate(patient)).Returns(new ValidationResult(expectedError));
+
             // Act
             var exception = await Assert.ThrowsAsync<CustomException>(async () => await _service.CreatePatientAsync(patient));
 
@@ -80,10 +78,9 @@ namespace WMDATest
             var mockSetPatients = listPatients.AsQueryable().BuildMockDbSet();
             var mockContext = new Mock<AppDbContext>();
             mockContext.Setup(c => c.Patients).Returns(mockSetPatients.Object);
-            _service = new PatientService(mockContext.Object, _validator.Object);
+            _service = new PatientService(mockContext.Object, _validator);
             Patient patient = new Patient() { FirstName = "MILLIE1", LastName = "Thomas", DateOfBirth = new DateTime(2000, 01, 01), DiseaseType = "alm" };
-            var expectedError = new List<ValidationFailure> { new("FirstName", "First name allows only alphabet characters.") };
-            _validator.Setup(t => t.Validate(patient)).Returns(new ValidationResult(expectedError));
+
             // Act
             var exception = await Assert.ThrowsAsync<CustomException>(async () => await _service.CreatePatientAsync(patient));
 
@@ -97,10 +94,9 @@ namespace WMDATest
             var mockSetPatients = listPatients.AsQueryable().BuildMockDbSet();
             var mockContext = new Mock<AppDbContext>();
             mockContext.Setup(c => c.Patients).Returns(mockSetPatients.Object);
-            _service = new PatientService(mockContext.Object, _validator.Object);
+            _service = new PatientService(mockContext.Object, _validator);
             Patient patient = new Patient() { FirstName = "MIL", LastName = "Thomas", DateOfBirth = new DateTime(2000, 01, 01), DiseaseType = "alm" };
-            var expectedError = new List<ValidationFailure> { new("FirstName", "First name should be at least 5 characters long.") };
-            _validator.Setup(t => t.Validate(patient)).Returns(new ValidationResult(expectedError));
+
             // Act
             var exception = await Assert.ThrowsAsync<CustomException>(async () => await _service.CreatePatientAsync(patient));
 
@@ -114,14 +110,9 @@ namespace WMDATest
             var mockSetPatients = listPatients.AsQueryable().BuildMockDbSet();
             var mockContext = new Mock<AppDbContext>();
             mockContext.Setup(c => c.Patients).Returns(mockSetPatients.Object);
-            _service = new PatientService(mockContext.Object, _validator.Object);
+            _service = new PatientService(mockContext.Object, _validator);
             Patient patient = new Patient() { FirstName = "TOM1", LastName = "Thomas", DateOfBirth = new DateTime(2000, 01, 01), DiseaseType = "alm" };
-            var expectedError = new List<ValidationFailure> 
-            { 
-                new("FirstName", "First name allows only alphabet characters."),
-                new("FirstName", "First name should be at least 5 characters long.")
-            };
-            _validator.Setup(t => t.Validate(patient)).Returns(new ValidationResult(expectedError));
+           
             // Act
             var exception = await Assert.ThrowsAsync<CustomException>(async () => await _service.CreatePatientAsync(patient));
 
